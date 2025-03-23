@@ -9,9 +9,13 @@ export class Ball {
     constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
-        this.baseSpeed = 300; // Base speed that will be randomly modified
-        this.dx = (Math.random() > 0.5 ? 1 : -1) * this.baseSpeed;
-        this.dy = (Math.random() * 2 - 1) * this.baseSpeed;
+        this.baseSpeed = 300;
+        
+        // Create a slight random angle between -30 and 30 degrees
+        const angle = (Math.random() - 0.5) * Math.PI / 3;
+        this.dx = this.baseSpeed * Math.sin(angle);
+        this.dy = -this.baseSpeed * Math.cos(angle); // Negative to go upward
+        
         this.radius = 10;
     }
 
@@ -54,8 +58,8 @@ export class Paddle {
     constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
-        this.width = 10;
-        this.height = 100;
+        this.width = 100;
+        this.height = 10;
         this.speed = 300; // Adjusted for delta time
     }
 

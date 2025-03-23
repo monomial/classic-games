@@ -26,6 +26,7 @@ class Breakout {
     private paddle: Paddle;
     private bricks: Brick[];
     private score: number;
+    private lives: number;
     private keys: { [key: string]: boolean };
     private lastTime: number;
     private gameOver: boolean;
@@ -39,10 +40,12 @@ class Breakout {
         this.canvas.height = 400;
 
         // Initialize game objects
-        this.ball = new Ball(this.canvas.width / 2, this.canvas.height - 50);
+        this.ball = new Ball(this.canvas.width / 2, this.canvas.height - 100);
+        this.ball.dy = -Math.abs(this.ball.dy); // Ensure ball starts moving upward
         this.paddle = new Paddle(this.canvas.width / 2, this.canvas.height - 20);
         this.bricks = this.initializeBricks();
         this.score = 0;
+        this.lives = 3;
         this.keys = {};
         this.lastTime = 0;
         this.gameOver = false;
@@ -92,20 +95,38 @@ class Breakout {
         this.ball.update(deltaTime);
 
         // Ball collision with walls
-        if (this.ball.x <= this.ball.radius || this.ball.x >= this.canvas.width - this.ball.radius) {
-            this.ball.dx *= -1;
+        if (this.ball.x <= this.ball.radius) {
+            this.ball.x = this.ball.radius;
+            this.ball.dx = Math.abs(this.ball.dx);
+        } else if (this.ball.x >= this.canvas.width - this.ball.radius) {
+            this.ball.x = this.canvas.width - this.ball.radius;
+            this.ball.dx = -Math.abs(this.ball.dx);
         }
 
         // Ball collision with top
         if (this.ball.y <= this.ball.radius) {
-            this.ball.dy *= -1;
+            this.ball.y = this.ball.radius;
+            this.ball.dy = Math.abs(this.ball.dy);
         }
 
         // Ball collision with paddle
         if (this.ball.y >= this.paddle.y - this.ball.radius &&
             this.ball.x >= this.paddle.x - this.paddle.width / 2 &&
             this.ball.x <= this.paddle.x + this.paddle.width / 2) {
-            this.ball.dy = -Math.abs(this.ball.dy);
+            // Ensure the ball stays above the paddle
+            this.ball.y = this.paddle.y - this.ball.radius;
+            
+            // Calculate angle based on where the ball hits the paddle
+            const hitPosition = (this.ball.x - (this.paddle.x - this.paddle.width / 2)) / this.paddle.width;
+            
+            // Limit the angle to prevent extreme angles
+            const maxBounceAngle = Math.PI / 3; // 60 degrees
+            const bounceAngle = (hitPosition - 0.5) * maxBounceAngle;
+            
+            // Set new velocity based on angle while maintaining consistent speed
+            const speed = this.ball.baseSpeed;
+            this.ball.dx = speed * Math.sin(bounceAngle);
+            this.ball.dy = -speed * Math.cos(bounceAngle);
         }
 
         // Ball collision with bricks
@@ -121,7 +142,12 @@ class Breakout {
 
         // Check for game over
         if (this.ball.y >= this.canvas.height) {
-            this.gameOver = true;
+            this.lives--;
+            if (this.lives <= 0) {
+                this.gameOver = true;
+            } else {
+                this.resetBall();
+            }
         }
     }
 
@@ -130,10 +156,11 @@ class Breakout {
         this.ctx.fillStyle = '#000';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw score
+        // Draw score and lives
         this.ctx.font = '24px Arial';
         this.ctx.fillStyle = '#fff';
         this.ctx.fillText(`Score: ${this.score}`, 10, 30);
+        this.ctx.fillText(`Lives: ${this.lives}`, this.canvas.width - 100, 30);
 
         // Draw game objects
         this.ball.draw(this.ctx);
@@ -155,6 +182,11 @@ class Breakout {
         this.update(deltaTime);
         this.draw();
         requestAnimationFrame((time) => this.gameLoop(time));
+    }
+
+    private resetBall(): void {
+        this.ball = new Ball(this.canvas.width / 2, this.canvas.height - 100);
+        this.ball.dy = -Math.abs(this.ball.dy); // Ensure ball starts moving upward
     }
 }
 
