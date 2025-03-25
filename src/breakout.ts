@@ -1,4 +1,5 @@
 import { Ball, Paddle } from './gameObjects';
+import { DebugPanel } from './debugPanel';
 
 class Brick {
     x: number;
@@ -30,10 +31,12 @@ class Breakout {
     private keys: { [key: string]: boolean };
     private lastTime: number;
     private gameOver: boolean;
+    private debugPanel: DebugPanel;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, debugPanel: DebugPanel) {
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d')!;
+        this.debugPanel = debugPanel;
         
         // Set canvas size
         this.canvas.width = 800;
@@ -181,6 +184,19 @@ class Breakout {
 
         this.update(deltaTime);
         this.draw();
+
+        // Update debug panel
+        this.debugPanel.updateFPS();
+        this.debugPanel.updateGameInfo({
+            'Score': this.score,
+            'Lives': this.lives,
+            'Bricks Remaining': this.bricks.length,
+            'Ball Position': `(${Math.round(this.ball.x)}, ${Math.round(this.ball.y)})`,
+            'Ball Velocity': `(${Math.round(this.ball.dx)}, ${Math.round(this.ball.dy)})`,
+            'Paddle Position': `X: ${Math.round(this.paddle.x)}`,
+            'Game State': this.gameOver ? 'Game Over' : 'Playing'
+        });
+
         requestAnimationFrame((time) => this.gameLoop(time));
     }
 

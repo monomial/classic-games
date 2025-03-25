@@ -1,4 +1,5 @@
 import { Ball, Paddle } from './gameObjects';
+import { DebugPanel } from './debugPanel';
 
 class Pong {
     private canvas: HTMLCanvasElement;
@@ -9,10 +10,12 @@ class Pong {
     private score: { left: number; right: number };
     private keys: { [key: string]: boolean };
     private lastTime: number;
+    private debugPanel: DebugPanel;
 
-    constructor() {
+    constructor(debugPanel: DebugPanel) {
         this.canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
         this.ctx = this.canvas.getContext('2d')!;
+        this.debugPanel = debugPanel;
         
         // Set canvas size
         this.canvas.width = 800;
@@ -122,6 +125,17 @@ class Pong {
 
         this.update(deltaTime);
         this.draw();
+
+        // Update debug panel
+        this.debugPanel.updateFPS();
+        this.debugPanel.updateGameInfo({
+            'Score': `${this.score.left} - ${this.score.right}`,
+            'Ball Position': `(${Math.round(this.ball.x)}, ${Math.round(this.ball.y)})`,
+            'Ball Velocity': `(${Math.round(this.ball.dx)}, ${Math.round(this.ball.dy)})`,
+            'Left Paddle': `Y: ${Math.round(this.leftPaddle.y)}`,
+            'Right Paddle': `Y: ${Math.round(this.rightPaddle.y)}`
+        });
+
         requestAnimationFrame((time) => this.gameLoop(time));
     }
 }
